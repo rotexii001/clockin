@@ -1,0 +1,28 @@
+{
+  "name": "edscool/student-clockin",
+  "description": "Edscool modular plugin for classroom teacher student clock-in attendance.",
+  "type": "edscool-plugin",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Rotimi Olaosebikan",
+      "email": "rotexii001@gmail.com"
+    }
+  ],
+  "require": {
+    "php": "^8.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Edscool\\Plugins\\ClockIn\\": "src/"
+    }
+  },
+  "extra": {
+    "edscool": {
+      "id": "edscool-student-clockin",
+      "providers": [
+        "Edscool\\Plugins\\ClockIn\\ClockInPluginServiceProvider"
+      ]
+    }
+  }
+}

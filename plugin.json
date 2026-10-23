@@ -1,0 +1,34 @@
+{
+  "id": "edscool-student-clockin",
+  "name": "Student Clock-In Attendance",
+  "version": "1.0.0",
+  "author": "Rotimi Olaosebikan",
+  "author_email": "rotexii001@gmail.com",
+  "category": "Academics & Grading",
+  "description": "Real-time classroom arrival clock-in module allowing teachers to quickly clock in students as they arrive at school.",
+  "icon": "fas fa-user-clock",
+  "service_provider": "Edscool\\Plugins\\ClockIn\\ClockInPluginServiceProvider",
+  "permissions": [
+    "students.read_basic",
+    "classes.read",
+    "attendance.record"
+  ],
+  "settings_schema": {
+    "late_arrival_time": {
+      "type": "string",
+      "label": "Late Arrival Threshold (HH:MM)",
+      "default": "08:15",
+      "required": true
+    },
+    "allow_undo": {
+      "type": "boolean",
+      "label": "Allow teachers to undo clock-in within 30 minutes",
+      "default": true
+    },
+    "auto_mark_absent_cutoff": {
+      "type": "string",
+      "label": "Auto-flag unclocked students after (HH:MM)",
+      "default": "10:00"
+    }
+  }
+}
