@@ -1,5 +1,6 @@
 {
   "id": "edscool-student-clockin",
+  "slug": "student-clockin",
   "name": "Student Clock-In Attendance",
   "version": "1.0.0",
   "author": "Rotimi Olaosebikan",
