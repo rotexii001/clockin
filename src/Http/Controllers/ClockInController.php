@@ -15,11 +15,8 @@ class ClockInController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth('owner')->user() ?? auth('school_admin')->user() ?? auth('staff')->user() ?? auth()->user();
-        $schoolId = session('active_school_id') 
-            ?? (is_object($user?->school) ? $user->school->id : $user?->school)
-            ?? $user?->school_id 
-            ?? 1;
+        $schoolId = $this->resolveSchoolId();
+        session(['active_school_id' => $schoolId]);
 
         $selectedClassId = $request->query('class_id');
         $today = now()->toDateString();
@@ -65,11 +62,7 @@ class ClockInController extends Controller
             'class_id' => 'nullable|integer',
         ]);
 
-        $user = auth('owner')->user() ?? auth('school_admin')->user() ?? auth('staff')->user() ?? auth()->user();
-        $schoolId = session('active_school_id') 
-            ?? (is_object($user?->school) ? $user->school->id : $user?->school)
-            ?? $user?->school_id 
-            ?? 1;
+        $schoolId = $this->resolveSchoolId();
 
         $studentId = (int) $request->input('student_id');
         $classId = $request->input('class_id');
@@ -138,11 +131,7 @@ class ClockInController extends Controller
             'student_id' => 'required|integer',
         ]);
 
-        $user = auth('owner')->user() ?? auth('school_admin')->user() ?? auth('staff')->user() ?? auth()->user();
-        $schoolId = session('active_school_id') 
-            ?? (is_object($user?->school) ? $user->school->id : $user?->school)
-            ?? $user?->school_id 
-            ?? 1;
+        $schoolId = $this->resolveSchoolId();
 
         $studentId = (int) $request->input('student_id');
         $today = now()->toDateString();
@@ -183,5 +172,61 @@ class ClockInController extends Controller
         }
 
         return $defaultSettings;
+    }
+
+    /**
+     * Safely resolve the active school ID for owner, school_admin, or staff.
+     */
+    protected function resolveSchoolId(): int
+    {
+        if (session('active_school_id')) {
+            return (int) session('active_school_id');
+        }
+
+        if (auth('owner')->check()) {
+            $ownerId = auth('owner')->id();
+            $school = \App\Models\schools::where('account_id', $ownerId)->where('view', 1)->first()
+                ?? \App\Models\schools::where('account_id', $ownerId)->first();
+            if ($school) {
+                return (int) $school->id;
+            }
+        }
+
+        if (auth('school_admin')->check()) {
+            $admin = auth('school_admin')->user();
+            if ($admin && $admin->school) {
+                return (int) (is_object($admin->school) ? $admin->school->id : $admin->school);
+            }
+        }
+
+        if (auth('staff')->check()) {
+            $staff = auth('staff')->user();
+            if ($staff) {
+                if (!empty($staff->school_id)) {
+                    return (int) $staff->school_id;
+                }
+                if ($staff->school) {
+                    if ($staff->school instanceof \Illuminate\Support\Collection) {
+                        return (int) (optional($staff->school->first())->id ?? 1);
+                    }
+                    return (int) (is_object($staff->school) ? $staff->school->id : $staff->school);
+                }
+            }
+        }
+
+        $fallbackUser = auth()->user();
+        if ($fallbackUser) {
+            if (!empty($fallbackUser->school_id)) {
+                return (int) $fallbackUser->school_id;
+            }
+            if ($fallbackUser->school) {
+                if ($fallbackUser->school instanceof \Illuminate\Support\Collection) {
+                    return (int) (optional($fallbackUser->school->first())->id ?? 1);
+                }
+                return (int) (is_object($fallbackUser->school) ? $fallbackUser->school->id : $fallbackUser->school);
+            }
+        }
+
+        return 1;
     }
 }

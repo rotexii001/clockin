@@ -24,23 +24,52 @@ class StudentClockInRecord extends Model
     protected static function booted(): void
     {
         static::addGlobalScope('school_tenant', function (Builder $builder) {
-            $schoolId = session('active_school_id') 
-                ?? auth()->user()->school 
-                ?? auth()->user()->school_id 
-                ?? request()->header('X-School-Id');
+            $school = session('active_school_id');
+            if (!$school) {
+                $user = auth('owner')->user() ?? auth('school_admin')->user() ?? auth('staff')->user() ?? auth()->user();
+                if ($user) {
+                    if (!empty($user->school_id)) {
+                        $school = $user->school_id;
+                    } elseif (!empty($user->school)) {
+                        $s = $user->school;
+                        if ($s instanceof \Illuminate\Support\Collection) {
+                            $school = optional($s->first())->id;
+                        } elseif (is_object($s)) {
+                            $school = $s->id ?? null;
+                        } else {
+                            $school = $s;
+                        }
+                    }
+                }
+            }
 
-            if ($schoolId) {
-                $builder->where('plg_clockin_records.school_id', $schoolId);
+            if ($school) {
+                $builder->where('plg_clockin_records.school_id', (int) $school);
             }
         });
 
         // Automatically assign active tenant when creating a new record
         static::creating(function ($model) {
             if (empty($model->school_id)) {
-                $model->school_id = session('active_school_id') 
-                    ?? auth()->user()->school 
-                    ?? auth()->user()->school_id 
-                    ?? request()->header('X-School-Id');
+                $school = session('active_school_id');
+                if (!$school) {
+                    $user = auth('owner')->user() ?? auth('school_admin')->user() ?? auth('staff')->user() ?? auth()->user();
+                    if ($user) {
+                        if (!empty($user->school_id)) {
+                            $school = $user->school_id;
+                        } elseif (!empty($user->school)) {
+                            $s = $user->school;
+                            if ($s instanceof \Illuminate\Support\Collection) {
+                                $school = optional($s->first())->id;
+                            } elseif (is_object($s)) {
+                                $school = $s->id ?? null;
+                            } else {
+                                $school = $s;
+                            }
+                        }
+                    }
+                }
+                $model->school_id = (int) ($school ?? 1);
             }
         });
     }
