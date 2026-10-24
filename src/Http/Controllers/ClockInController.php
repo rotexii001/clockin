@@ -15,9 +15,10 @@ class ClockInController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth('owner')->user() ?? auth('school_admin')->user() ?? auth('staff')->user() ?? auth()->user();
         $schoolId = session('active_school_id') 
-            ?? auth()->user()->school 
-            ?? auth()->user()->school_id 
+            ?? (is_object($user?->school) ? $user->school->id : $user?->school)
+            ?? $user?->school_id 
             ?? 1;
 
         $selectedClassId = $request->query('class_id');
@@ -26,7 +27,7 @@ class ClockInController extends Controller
         // Fetch classrooms available in the school
         $classrooms = collect([]);
         if (class_exists(\App\Models\classroom::class)) {
-            $classrooms = \App\Models\classroom::where('school', $schoolId)->get();
+            $classrooms = \App\Models\classroom::where('school_id', $schoolId)->get();
             if (!$selectedClassId && $classrooms->isNotEmpty()) {
                 $selectedClassId = $classrooms->first()->id;
             }
@@ -37,8 +38,8 @@ class ClockInController extends Controller
         if ($selectedClassId && class_exists(\App\Models\students::class)) {
             $students = \App\Models\students::where('school', $schoolId)
                 ->where('class', $selectedClassId)
-                ->select(['id', 'first_name', 'last_name', 'admission_number', 'class', 'school'])
-                ->orderBy('first_name')
+                ->select(['id', 'surname', 'othernames', 'admission_number', 'class', 'school'])
+                ->orderBy('surname')
                 ->get();
         }
 
@@ -64,9 +65,10 @@ class ClockInController extends Controller
             'class_id' => 'nullable|integer',
         ]);
 
+        $user = auth('owner')->user() ?? auth('school_admin')->user() ?? auth('staff')->user() ?? auth()->user();
         $schoolId = session('active_school_id') 
-            ?? auth()->user()->school 
-            ?? auth()->user()->school_id 
+            ?? (is_object($user?->school) ? $user->school->id : $user?->school)
+            ?? $user?->school_id 
             ?? 1;
 
         $studentId = (int) $request->input('student_id');
@@ -136,9 +138,10 @@ class ClockInController extends Controller
             'student_id' => 'required|integer',
         ]);
 
+        $user = auth('owner')->user() ?? auth('school_admin')->user() ?? auth('staff')->user() ?? auth()->user();
         $schoolId = session('active_school_id') 
-            ?? auth()->user()->school 
-            ?? auth()->user()->school_id 
+            ?? (is_object($user?->school) ? $user->school->id : $user?->school)
+            ?? $user?->school_id 
             ?? 1;
 
         $studentId = (int) $request->input('student_id');
@@ -168,7 +171,7 @@ class ClockInController extends Controller
         ];
 
         if (class_exists(\App\Models\SchoolPlugin::class) && class_exists(\App\Models\Plugin::class)) {
-            $plugin = \App\Models\Plugin::where('slug', 'edscool-student-clockin')->first();
+            $plugin = \App\Models\Plugin::whereIn('slug', ['student-clockin', 'edscool-student-clockin'])->first();
             if ($plugin) {
                 $installed = \App\Models\SchoolPlugin::where('school_id', $schoolId)
                     ->where('plugin_id', $plugin->id)

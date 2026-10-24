@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Edscool\Plugins\ClockIn\Http\Controllers\ClockInController;
 
-Route::middleware(['web', 'auth'])
+Route::middleware(['web', 'auth:web,owner,staff,school_admin'])
     ->prefix('portal/plugins/clockin')
     ->name('plugins.clockin.')
     ->group(function () {

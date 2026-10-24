@@ -1,3 +1,5 @@
+@component('layout.master')
+@section('title', 'Student Clock-In Attendance')
 <div class="clockin-container" style="font-family: 'Plus Jakarta Sans', system-ui, sans-serif; padding: 24px; max-width: 1200px; margin: 0 auto;">
     
     <!-- Header -->
@@ -99,10 +101,10 @@
                             <td style="padding: 14px 20px;">
                                 <div style="display: flex; align-items: center; gap: 10px;">
                                     <div style="width: 34px; height: 34px; border-radius: 50%; background: #e0f2fe; color: #0369a1; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12.5px;">
-                                        {{ strtoupper(substr($student->first_name ?? 'S', 0, 1)) }}
+                                        {{ strtoupper(substr($student->surname ?? $student->othernames ?? 'S', 0, 1)) }}
                                     </div>
                                     <div>
-                                        <div style="font-weight: 700; color: #0f172a;">{{ $student->first_name }} {{ $student->last_name }}</div>
+                                        <div style="font-weight: 700; color: #0f172a;">{{ $student->surname }} {{ $student->othernames }}</div>
                                     </div>
                                 </div>
                             </td>
@@ -167,3 +169,4 @@
         </div>
     </div>
 </div>
+@endcomponent
